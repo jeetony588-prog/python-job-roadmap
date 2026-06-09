@@ -1,5 +1,5 @@
 import json
-
+import argparse
 
 def load_tasks():
     try:
@@ -8,52 +8,52 @@ def load_tasks():
     except:
         return []
 
-
 def save_tasks(tasks):
     with open("tasks.json", "w", encoding="utf-8") as f:
-        json.dump(tasks, f, ensure_ascii=False)
+        json.dump(tasks, f, ensure_ascii=False, indent=2)
 
+def add(task):
+    tasks = load_tasks()
+    tasks.append(task)
+    save_tasks(tasks)
+    print(f"✅ 已添加: {task}")
 
-tasks = load_tasks()
-
-while True:
-
-    print("\n==== Todo ====")
-    print("1 添加")
-    print("2 查看")
-    print("3 删除")
-    print("4 退出")
-
-    choice = input("选择：")
-
-    if choice == "1":
-
-        task = input("任务：")
-
-        tasks.append(task)
-
-        save_tasks(tasks)
-
-        print("完成")
-
-    elif choice == "2":
-
+def list_tasks():
+    tasks = load_tasks()
+    if not tasks:
+        print("📭 暂无任务")
+    else:
         for i, t in enumerate(tasks, 1):
+            print(f"{i}. {t}")
 
-            print(i, t)
+def delete(index):
+    tasks = load_tasks()
+    if 1 <= index <= len(tasks):
+        removed = tasks.pop(index-1)
+        save_tasks(tasks)
+        print(f"🗑️ 已删除: {removed}")
+    else:
+        print("❌ 编号无效")
 
-    elif choice == "3":
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Todo 命令行工具")
+    subparsers = parser.add_subparsers(dest="command")
 
-        index = int(input("删除编号：")) - 1
+    p_add = subparsers.add_parser("add", help="添加任务")
+    p_add.add_argument("task", type=str, help="任务内容")
 
-        if 0 <= index < len(tasks):
+    p_list = subparsers.add_parser("list", help="查看所有任务")
 
-            tasks.pop(index)
+    p_del = subparsers.add_parser("del", help="删除任务")
+    p_del.add_argument("index", type=int, help="任务编号")
 
-            save_tasks(tasks)
+    args = parser.parse_args()
 
-            print("已删除")
-
-    elif choice == "4":
-
-        break
+    if args.command == "add":
+        add(args.task)
+    elif args.command == "list":
+        list_tasks()
+    elif args.command == "del":
+        delete(args.index)
+    else:
+        parser.print_help()
